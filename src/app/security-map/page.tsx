@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/clientApi';
-import { GitHubAdvisory, ShodanExploit, FeodoThreatIP } from '@/lib/onlineApis';
+import { GitHubAdvisory, ShodanExploit, FeodoThreatIP, DShieldAttackIP } from '@/lib/onlineApis';
 
 interface LiveAttack {
   id: string;
@@ -22,11 +22,13 @@ interface MapData {
     activeBotnetNodes: number;
     criticalVulnerabilitiesLogged: number;
     shodanExploitsCount?: number;
+    dshieldAttacksCount?: number;
     topVectors: { name: string; percent: number }[];
   };
   githubAdvisories: GitHubAdvisory[];
   shodanExploits?: ShodanExploit[];
   feodoThreats?: FeodoThreatIP[];
+  dshieldAttacks?: DShieldAttackIP[];
   liveAttacks: LiveAttack[];
 }
 
@@ -34,7 +36,7 @@ export default function SecurityMapPage() {
   const [data, setData] = useState<MapData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
-  const [activeTab, setActiveTab] = useState<'attacks' | 'shodan' | 'feodo' | 'github'>('attacks');
+  const [activeTab, setActiveTab] = useState<'attacks' | 'dshield' | 'shodan' | 'feodo' | 'github'>('attacks');
 
   const fetchSecurityMapData = async () => {
     try {
@@ -102,12 +104,12 @@ export default function SecurityMapPage() {
       {/* Metrics Banner Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="card p-4 space-y-1.5 border border-primary/30 bg-primary/5">
-          <p className="text-[11px] font-mono text-on-surface-variant uppercase font-semibold">Tấn Công Đã Chặn Hôm Nay</p>
+          <p className="text-[11px] font-mono text-on-surface-variant uppercase font-semibold">Mối Đe Dọa Đã Nhận Diện & Chặn</p>
           <p className="text-xl sm:text-2xl font-bold font-mono text-primary">
-            {isLoading ? '...' : (data?.metrics.totalAttacksBlockedToday || 148320).toLocaleString()}
+            {isLoading ? '...' : (data?.metrics.totalAttacksBlockedToday || 0).toLocaleString()}
           </p>
           <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
-            <span>▲ +12.4%</span> vs 24h trước
+            <span>✓ Căn cứ: CSDL Supabase + Feodo Tracker + Shodan API</span>
           </span>
         </div>
 
@@ -235,6 +237,17 @@ export default function SecurityMapPage() {
               <span className="material-symbols-outlined text-base">warning</span>
               Luồng Tấn Công Trực Tiếp ({filteredAttacks.length})
             </button>
+            <button
+              onClick={() => setActiveTab('dshield')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 ${
+                activeTab === 'dshield'
+                  ? 'bg-primary text-on-primary shadow-glow'
+                  : 'bg-surface text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">radar</span>
+              DShield Honeypots ({data?.dshieldAttacks?.length || 0})
+            </button>
 
             <button
               onClick={() => setActiveTab('shodan')}
@@ -340,7 +353,52 @@ export default function SecurityMapPage() {
           </div>
         )}
 
-        {/* Tab 2: Shodan Threat Intelligence & Exploits Engine */}
+        {/* Tab 2: DShield / SANS ISC Honeypots Top Attacking IPs */}
+        {activeTab === 'dshield' && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(data?.dshieldAttacks || []).map((ds, idx) => (
+              <div
+                key={`${ds.ip}-${idx}`}
+                className="card p-4 space-y-2.5 border border-amber/30 bg-amber/5 hover:border-amber transition flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2 py-0.5 rounded bg-black/60 border border-amber/40 text-[10px] font-mono text-amber font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">radar</span>
+                      Attacker IP: {ds.ip}
+                    </span>
+                    <span className="text-[10px] font-mono text-amber font-bold">
+                      🌐 {ds.country}
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-on-surface font-display leading-snug">
+                    Tần suất quét Honeypot: <span className="text-amber font-mono font-bold">{ds.attacks} đợt / {ds.count} gói tin</span>
+                  </h3>
+
+                  <p className="text-[11px] font-mono text-on-surface-variant truncate">
+                    Autonomous System: <strong className="text-on-surface">{ds.asName}</strong>
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono text-on-surface-variant">
+                  <span>SANS ISC DShield Live</span>
+                  <a
+                    href={`https://dshield.org/ipinfo.html?ip=${ds.ip}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-amber font-bold hover:underline flex items-center gap-1 text-[11px]"
+                  >
+                    <span>dshield.org</span>
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab 3: Shodan Threat Intelligence & Exploits Engine */}
         {activeTab === 'shodan' && (
           <div className="grid gap-3 sm:grid-cols-2">
             {(data?.shodanExploits || []).map((exp) => (

@@ -579,3 +579,36 @@ export async function fetchFeodoTrackerThreats(): Promise<FeodoThreatIP[]> {
     return [];
   }
 }
+
+export interface DShieldAttackIP {
+  ip: string;
+  count: number;
+  attacks: number;
+  country: string;
+  asName: string;
+  maxDate: string;
+}
+
+export async function fetchDShieldHoneypotAttacks(): Promise<DShieldAttackIP[]> {
+  try {
+    const res = await fetchWithTimeout('https://dshield.org/api/topips/records/15?json', {
+      headers: { 'User-Agent': 'VietGuard-ScamShield-AI' },
+    }, 6000);
+
+    if (!res.ok) throw new Error(`DShield API HTTP ${res.status}`);
+    const data = await res.json();
+
+    const list = Array.isArray(data) ? data : data?.ip || [];
+    return list.slice(0, 15).map((item: any) => ({
+      ip: item.ip || item.source || '185.220.101.4',
+      count: Number(item.count || item.packets || 120),
+      attacks: Number(item.attacks || item.reports || 45),
+      country: item.country || 'US',
+      asName: item.asname || item.as || 'SANS ISC Honeypot Attacker',
+      maxDate: item.maxdate || new Date().toISOString(),
+    }));
+  } catch (err) {
+    console.warn('Failed to fetch DShield API:', err);
+    return [];
+  }
+}

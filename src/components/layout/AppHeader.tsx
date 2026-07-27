@@ -59,7 +59,7 @@ export const AppHeader: React.FC = () => {
   return (
     <>
       <header className="app-header sticky top-0 z-50 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-content items-center gap-3 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-3 sm:px-6">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary-soft text-primary transition group-hover:scale-105">
               <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -74,7 +74,7 @@ export const AppHeader: React.FC = () => {
             </div>
           </Link>
 
-          <nav className="ml-2 hidden items-center gap-0.5 lg:flex">
+          <nav className="ml-2 hidden items-center gap-1 xl:gap-1.5 lg:flex">
             {NAV.map((item) => {
               const active = pathname === item.href || (item.href === '/developer' && pathname === '/api-docs');
               return (
@@ -82,7 +82,7 @@ export const AppHeader: React.FC = () => {
                   key={item.href}
                   id={item.tourId}
                   href={item.href}
-                  className={`rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition ${
+                  className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition ${
                     active
                       ? 'bg-primary-soft text-primary'
                       : 'text-on-surface-variant hover:bg-white/[0.04] hover:text-on-surface'
@@ -94,7 +94,7 @@ export const AppHeader: React.FC = () => {
             })}
           </nav>
 
-          <form onSubmit={onSearch} className="ml-auto hidden min-w-0 max-w-xs flex-1 md:block">
+          <form onSubmit={onSearch} className="ml-auto hidden min-w-0 max-w-[200px] xl:max-w-xs flex-1 md:block">
             <div className="relative">
               <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">
                 search
@@ -108,11 +108,11 @@ export const AppHeader: React.FC = () => {
             </div>
           </form>
 
-          <div className="ml-auto flex items-center gap-1 md:ml-2">
+          <div className="ml-auto flex items-center gap-1 shrink-0 md:ml-2">
             <button
               type="button"
               onClick={toggle}
-              className="btn-ghost !px-2.5 !py-2"
+              className="btn-ghost !px-2.5 !py-2 shrink-0"
               title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
               aria-label="Đổi theme"
             >
@@ -123,7 +123,7 @@ export const AppHeader: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowHotline(true)}
-              className="btn-ghost !px-2.5 !py-2"
+              className="btn-ghost !px-2.5 !py-2 shrink-0"
               title="Hotline khẩn"
             >
               <span className="material-symbols-outlined text-[20px] text-danger">emergency</span>
@@ -135,7 +135,7 @@ export const AppHeader: React.FC = () => {
                 setApiKey(localStorage.getItem('user_gemini_api_key') || '');
                 setShowKey(true);
               }}
-              className="btn-ghost !px-2.5 !py-2 relative"
+              className="btn-ghost !px-2.5 !py-2 relative shrink-0"
               title="Gemini API Key"
             >
               <span className="material-symbols-outlined text-[20px] text-primary">key</span>
@@ -148,11 +148,11 @@ export const AppHeader: React.FC = () => {
               type="button"
               id="tour-help-button"
               onClick={() => setShowProductTour(true)}
-              className="btn-ghost !px-2.5 !py-2 flex items-center gap-1 text-xs font-semibold text-primary"
+              className="btn-ghost !px-2.5 !py-2 flex items-center gap-1 text-xs font-semibold text-primary shrink-0 whitespace-nowrap"
               title="Product Tour Hướng dẫn"
             >
               <span className="material-symbols-outlined text-[20px]">explore</span>
-              <span className="hidden sm:inline">Product Tour</span>
+              <span className="hidden xl:inline whitespace-nowrap">Product Tour</span>
             </button>
             <button
               type="button"
