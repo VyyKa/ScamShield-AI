@@ -1,7 +1,5 @@
-'use client';
-
-import DeveloperPage from '@/app/developer/page';
+import { redirect } from 'next/navigation';
 
 export default function ApiDocsPage() {
-  return <DeveloperPage />;
+  redirect('/');
 }

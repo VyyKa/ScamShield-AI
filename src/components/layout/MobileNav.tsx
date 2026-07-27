@@ -10,7 +10,7 @@ const ITEMS = [
   { href: '/troll', label: 'Troll', icon: 'smart_toy' },
   { href: '/honey', label: 'Deepfake', icon: 'face' },
   { href: '/database', label: 'Kho', icon: 'database' },
-  { href: 'https://cybermap.kaspersky.com/', label: 'Threats', icon: 'public', external: true },
+  { href: 'https://cybermap.kaspersky.com/', label: 'Threats', icon: 'open_in_new', external: true },
 ];
 
 export const MobileNav: React.FC = () => {

@@ -15,8 +15,7 @@ const NAV = [
   { href: '/troll', label: 'Troll AI', tourId: 'tour-nav-troll' },
   { href: '/honey', label: 'Deepfake & Trap', tourId: 'tour-nav-honey' },
   { href: '/database', label: 'Kho cảnh báo', tourId: 'tour-nav-database' },
-  { href: 'https://cybermap.kaspersky.com/', label: 'Security Map 🌐', tourId: 'tour-nav-secmap', external: true },
-  { href: '/developer', label: 'API', tourId: 'tour-nav-developer' },
+  { href: 'https://cybermap.kaspersky.com/', label: 'Security Map', tourId: 'tour-nav-secmap', external: true },
 ];
 
 export const AppHeader: React.FC = () => {
@@ -56,23 +55,51 @@ export const AppHeader: React.FC = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showAdminUnlockNotice, setShowAdminUnlockNotice] = useState(false);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    if (clickTimer) clearTimeout(clickTimer);
+    
+    const nextCount = logoClicks + 1;
+    setLogoClicks(nextCount);
+
+    if (nextCount >= 5) {
+      localStorage.setItem('scamshield_admin_mode', 'true');
+      setShowAdminUnlockNotice(true);
+      setLogoClicks(0);
+      setTimeout(() => {
+        window.location.href = '/developer?key=admin';
+      }, 600);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setLogoClicks(0);
+    }, 2500);
+    setClickTimer(timer);
+  };
+
   return (
     <>
       <header className="app-header sticky top-0 z-50 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-3 sm:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary-soft text-primary transition group-hover:scale-105">
-              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                shield_person
-              </span>
-            </div>
-            <div className="hidden min-[400px]:block">
-              <p className="font-display text-[15px] font-bold leading-tight tracking-tight">
-                ScamShield <span className="text-gradient-green">AI</span>
-              </p>
-              <p className="text-[10px] text-on-surface-variant">VietGuard Anti-Scam</p>
-            </div>
-          </Link>
+          <div onClick={handleLogoClick} className="cursor-pointer">
+            <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary-soft text-primary transition group-hover:scale-105">
+                <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  shield_person
+                </span>
+              </div>
+              <div className="hidden min-[400px]:block">
+                <p className="font-display text-[15px] font-bold leading-tight tracking-tight">
+                  ScamShield <span className="text-gradient-green">AI</span>
+                </p>
+                <p className="text-[10px] text-on-surface-variant">VietGuard Anti-Scam</p>
+              </div>
+            </Link>
+          </div>
 
           <nav className="ml-2 hidden items-center gap-1 xl:gap-1.5 lg:flex">
             {NAV.map((item) => {
@@ -85,9 +112,10 @@ export const AppHeader: React.FC = () => {
                     href={item.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition text-on-surface-variant hover:bg-white/[0.04] hover:text-on-surface"
+                    className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition text-on-surface-variant hover:bg-white/[0.04] hover:text-on-surface inline-flex items-center gap-1"
                   >
-                    {item.label}
+                    <span>{item.label}</span>
+                    <span className="material-symbols-outlined text-[14px] text-primary/80">open_in_new</span>
                   </a>
                 );
               }
@@ -318,6 +346,12 @@ export const AppHeader: React.FC = () => {
 
       <OnboardingGuideModal isOpen={showGuideModal} onClose={() => setShowGuideModal(false)} />
       <ProductTour isOpen={showProductTour} onClose={() => setShowProductTour(false)} />
+
+      {showAdminUnlockNotice && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black font-bold font-mono text-xs px-4 py-2.5 rounded-xl shadow-[0_10px_30px_rgba(52,211,153,0.5)] border border-emerald-300 animate-bounce">
+          🔓 Đã mở khóa Admin Mode! Đang chuyển hướng vào Developer API Hub...
+        </div>
+      )}
     </>
   );
 };

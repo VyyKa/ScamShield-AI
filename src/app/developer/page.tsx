@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface EndpointDef {
   id: string;
@@ -125,6 +126,9 @@ const ENDPOINTS: EndpointDef[] = [
 ];
 
 export default function DeveloperPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [activeId, setActiveId] = useState('lookup');
   const [payload, setPayload] = useState('');
   const [queryParams, setQueryParams] = useState('');
@@ -133,6 +137,20 @@ export default function DeveloperPage() {
   const [latency, setLatency] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState('');
+
+  useEffect(() => {
+    const key = searchParams.get('key') || searchParams.get('secret') || searchParams.get('dev');
+    const isSavedAdmin = typeof window !== 'undefined' && localStorage.getItem('scamshield_admin_mode') === 'true';
+
+    if (key === 'admin' || key === 'scamshield' || key === 'true' || isSavedAdmin) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('scamshield_admin_mode', 'true');
+      }
+      setIsAuthorized(true);
+    } else {
+      router.replace('/');
+    }
+  }, [searchParams, router]);
 
   const ep = ENDPOINTS.find((e) => e.id === activeId)!;
 
@@ -178,8 +196,16 @@ export default function DeveloperPage() {
     }
   };
 
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center font-mono text-xs text-on-surface-variant">
+        🔒 Đang kiểm tra quyền Admin Developer...
+      </div>
+    );
+  }
+
   return (
-    <div className="page-wrap space-y-5">
+    <div className="page-wrap space-y-6">
       <header>
         <h1 className="section-title">Developer API Hub</h1>
         <p className="section-sub">
