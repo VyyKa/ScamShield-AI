@@ -10,7 +10,7 @@ const ITEMS = [
   { href: '/troll', label: 'Troll', icon: 'smart_toy' },
   { href: '/honey', label: 'Deepfake', icon: 'face' },
   { href: '/database', label: 'Kho', icon: 'database' },
-  { href: '/security-map', label: 'Threats', icon: 'public' },
+  { href: 'https://cybermap.kaspersky.com/', label: 'Threats', icon: 'public', external: true },
 ];
 
 export const MobileNav: React.FC = () => {
@@ -21,6 +21,26 @@ export const MobileNav: React.FC = () => {
       <div className="mx-auto flex h-[64px] max-w-lg items-stretch justify-around px-1">
         {ITEMS.map((item) => {
           const active = pathname === item.href;
+          if (item.external) {
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noreferrer"
+                className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 transition text-on-surface-variant"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl">
+                  <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0" }}>
+                    {item.icon}
+                  </span>
+                </span>
+                <span className="truncate text-[10px] font-medium tracking-tight">
+                  {item.label}
+                </span>
+              </a>
+            );
+          }
           return (
             <Link
               key={item.href}
@@ -44,7 +64,9 @@ export const MobileNav: React.FC = () => {
                   {item.icon}
                 </span>
               </span>
-              <span className="truncate text-[10px] font-semibold">{item.label}</span>
+              <span className="truncate text-[10px] font-medium tracking-tight">
+                {item.label}
+              </span>
             </Link>
           );
         })}

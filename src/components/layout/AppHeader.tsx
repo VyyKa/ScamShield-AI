@@ -15,7 +15,7 @@ const NAV = [
   { href: '/troll', label: 'Troll AI', tourId: 'tour-nav-troll' },
   { href: '/honey', label: 'Deepfake & Trap', tourId: 'tour-nav-honey' },
   { href: '/database', label: 'Kho cảnh báo', tourId: 'tour-nav-database' },
-  { href: '/security-map', label: 'Security Map 🌐', tourId: 'tour-nav-secmap' },
+  { href: 'https://cybermap.kaspersky.com/', label: 'Security Map 🌐', tourId: 'tour-nav-secmap', external: true },
   { href: '/developer', label: 'API', tourId: 'tour-nav-developer' },
 ];
 
@@ -77,6 +77,20 @@ export const AppHeader: React.FC = () => {
           <nav className="ml-2 hidden items-center gap-1 xl:gap-1.5 lg:flex">
             {NAV.map((item) => {
               const active = pathname === item.href || (item.href === '/developer' && pathname === '/api-docs');
+              if (item.external) {
+                return (
+                  <a
+                    key={item.href}
+                    id={item.tourId}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition text-on-surface-variant hover:bg-white/[0.04] hover:text-on-surface"
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
               return (
                 <Link
                   key={item.href}
