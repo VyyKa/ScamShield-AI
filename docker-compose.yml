@@ -1,0 +1,28 @@
+# Local PostgreSQL for ScamShield AI
+# Usage:
+#   docker compose up -d
+#   cp .env.example .env   # set DATABASE_URL
+#   npx prisma db push
+#   npm run db:seed
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: scamshield-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: scamshield
+      POSTGRES_PASSWORD: scamshield
+      POSTGRES_DB: scamshield
+    volumes:
+      - scamshield_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U scamshield -d scamshield']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  scamshield_pg_data:

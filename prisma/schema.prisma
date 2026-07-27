@@ -1,0 +1,324 @@
+// =============================================================================
+// ScamShield AI — PostgreSQL schema (community blacklist + ops logs)
+// Provider: PostgreSQL 15+
+// Local: docker compose up -d  →  DATABASE_URL in .env
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Auth / identity
+// -----------------------------------------------------------------------------
+
+/// Ứng dụng user (gắn NextAuth/Clerk sau). Anonymous report: reporterId = null.
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  displayName  String?
+  /// USER | MODERATOR | ADMIN
+  role         String   @default("USER")
+  /// Điểm uy tín cộng đồng (tăng khi report verified, giảm khi spam)
+  reputation   Int      @default(0)
+  isBanned     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  reports             Report[]           @relation("ReporterReports")
+  votes               Vote[]
+  moderationActions   ModerationEvent[]  @relation("ModeratorEvents")
+  scanLogs            ScanLog[]
+  trollSessions       TrollSession[]
+  honeyTokens         HoneyToken[]
+
+  @@index([role])
+  @@index([reputation])
+}
+
+// -----------------------------------------------------------------------------
+// Community blacklist core
+// -----------------------------------------------------------------------------
+
+/// Thực thể bị tố cáo (STK / SĐT / domain / Zalo…) — 1 dòng / target đã normalize.
+model ScamRecord {
+  id String @id @default(uuid())
+
+  /// bank_account | phone_number | zalo_account | phishing_website
+  category String
+
+  /// Giá trị hiển thị gốc (có thể có space, +84…)
+  targetValue String
+
+  /// Khóa dedupe: category + normalize(targetValue) — unique
+  targetNormalized String
+
+  ownerName String?
+  bankName  String?
+
+  /// Nhãn hành vi chính (shipper COD, CTV TikTok…)
+  scamType String
+
+  /// CRITICAL | HIGH | MEDIUM | LOW
+  riskLevel String @default("HIGH")
+
+  /// UNDER_REVIEW | VERIFIED | DISPUTED | ARCHIVED
+  status String @default("UNDER_REVIEW")
+
+  /// Đếm denormalized (cập nhật khi có Report/Vote)
+  reportCount  Int @default(0)
+  confirmCount Int @default(0)
+  disputeCount Int @default(0)
+  upvotes      Int @default(0)
+
+  /// 0–100: fusion score (report + vote + intel + mod)
+  confidenceScore Int @default(0)
+
+  /// Mô tả tổng hợp / bằng chứng tóm tắt (public)
+  description String @default("")
+
+  /// Nguồn tin cậy ngoài (json string: partner feed, urlhaus, …)
+  externalSourcesJson String @default("[]")
+
+  /// "Vừa xong" | ISO — giữ string cho UI legacy; ưu tiên lastReportedAt
+  lastReported   String   @default("Vừa xong")
+  firstReportedAt DateTime @default(now())
+  lastReportedAt  DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports           Report[]
+  votes             Vote[]
+  moderationEvents  ModerationEvent[]
+
+  @@unique([category, targetNormalized])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([confidenceScore])
+  @@index([lastReportedAt])
+  @@index([targetValue])
+  @@index([scamType])
+}
+
+/// Mỗi lần user (hoặc anonymous) gửi tố cáo.
+model Report {
+  id String @id @default(uuid())
+
+  entityId String
+  entity   ScamRecord @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  reporterId String?
+  reporter   User?   @relation("ReporterReports", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  /// Hành vi lừa đảo lúc report (có thể khác scamType entity)
+  scamType    String
+  description String  @default("")
+  /// JSON array URL bằng chứng (ảnh/drive) — không lưu file trong DB
+  evidenceJson String @default("[]")
+
+  /// PENDING | ACCEPTED | REJECTED | SPAM
+  status String @default("PENDING")
+
+  /// IP hash (privacy) để chống flood anonymous
+  reporterIpHash String?
+  userAgent      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([entityId, createdAt])
+  @@index([reporterId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Vote cộng đồng trên entity (1 user / 1 entity / 1 loại logic qua unique).
+model Vote {
+  id String @id @default(uuid())
+
+  entityId String
+  entity   ScamRecord @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// CONFIRM = "đúng là scam" | DISPUTE = "không đúng" | UPVOTE = hữu ích
+  type String
+
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([entityId, userId, type])
+  @@index([entityId])
+  @@index([userId])
+  @@index([type])
+}
+
+/// Nhật ký duyệt / escalate của moderator.
+model ModerationEvent {
+  id String @id @default(uuid())
+
+  entityId String
+  entity   ScamRecord @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  moderatorId String?
+  moderator   User?   @relation("ModeratorEvents", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  /// VERIFY | UNVERIFY | DISPUTE | ARCHIVE | REOPEN | EDIT_META | REJECT_REPORT | BAN_HINT
+  action String
+
+  fromStatus String?
+  toStatus   String?
+  note       String  @default("")
+
+  /// Snapshot fields changed (JSON)
+  metaJson String @default("{}")
+
+  createdAt DateTime @default(now())
+
+  @@index([entityId, createdAt])
+  @@index([moderatorId])
+  @@index([action])
+}
+
+// -----------------------------------------------------------------------------
+// Scan / forensics logs
+// -----------------------------------------------------------------------------
+
+model ScanLog {
+  id String @id @default(uuid())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// fake_bill | shipper_cross | physical_poster
+  subMode String
+
+  isScam    Boolean @default(true)
+  riskScore Int     @default(0)
+
+  redFlagsJson      String @default("[]")
+  analysisDetails   String @default("")
+  recommendedAction String @default("")
+  scannedText       String?
+
+  /// gemini model id hoặc "heuristic"
+  modelUsed   String?
+  isFallback  Boolean @default(false)
+  /// JSON threat intel snapshot
+  intelJson   String  @default("{}")
+
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([riskScore])
+  @@index([subMode])
+}
+
+// -----------------------------------------------------------------------------
+// Auto-troll sessions
+// -----------------------------------------------------------------------------
+
+model TrollSession {
+  id String @id @default(uuid())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// Client session key (uuid từ browser) để gộp turn
+  clientSessionId String?
+
+  persona            String
+  lastScammerMessage String
+  botReply           String
+  frustrationLevel   Int    @default(5)
+  timeWastedMins     Int    @default(0)
+  modelUsed          String?
+  isFallback         Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([clientSessionId])
+  @@index([persona])
+}
+
+// -----------------------------------------------------------------------------
+// Honey canary
+// -----------------------------------------------------------------------------
+
+model HoneyToken {
+  id String @id @default(uuid())
+
+  creatorId String?
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  type        String
+  targetName  String
+  /// Raw token public trong URL (hoặc hash nếu sau này rotate)
+  canaryToken String @unique
+  ipTrapUrl   String
+
+  /// ACTIVE | DISABLED | EXPIRED
+  status         String @default("ACTIVE")
+  triggeredCount Int    @default(0)
+  expiresAt      DateTime?
+
+  createdAt DateTime @default(now())
+  trapLogs  TrapLog[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model TrapLog {
+  id String @id @default(uuid())
+
+  honeyTokenId String
+  honeyToken   HoneyToken @relation(fields: [honeyTokenId], references: [id], onDelete: Cascade)
+
+  ipAddress String
+  location  String?
+  country   String?
+  city      String?
+  isp       String?
+  userAgent String?
+  referer   String?
+  geoJson   String  @default("{}")
+
+  createdAt DateTime @default(now())
+
+  @@index([honeyTokenId, createdAt])
+  @@index([ipAddress])
+  @@index([createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// System / audit
+// -----------------------------------------------------------------------------
+
+model SystemLog {
+  id        String   @id @default(uuid())
+  /// INFO | WARN | ERROR
+  level     String   @default("INFO")
+  /// SCAN | TROLL | HONEY | DATABASE | MODERATION | SENTINEL | LOOKUP
+  module    String
+  message   String
+  metaJson  String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([module, createdAt])
+  @@index([level])
+  @@index([createdAt])
+}

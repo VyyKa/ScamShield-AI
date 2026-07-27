@@ -1,0 +1,101 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        background: 'var(--bg)',
+        surface: 'var(--surface)',
+        'surface-elevated': 'var(--elevated)',
+        'surface-muted': 'var(--muted-surface)',
+        'surface-hover': 'var(--hover-surface)',
+        border: 'var(--border)',
+        'border-strong': 'var(--border-strong)',
+        'on-surface': 'var(--text)',
+        'on-surface-variant': 'var(--muted)',
+        'on-background': 'var(--text)',
+        primary: 'var(--primary)',
+        'primary-soft': 'var(--primary-soft)',
+        'primary-muted': 'var(--primary-muted)',
+        'on-primary': 'var(--on-primary)',
+        accent: 'var(--accent)',
+        'accent-soft': 'var(--accent-soft)',
+        cyan: 'var(--cyan)',
+        'cyan-soft': 'var(--cyan-soft)',
+        amber: 'var(--amber)',
+        'amber-soft': 'var(--amber-soft)',
+        danger: 'var(--danger)',
+        'danger-soft': 'var(--danger-soft)',
+        success: 'var(--primary)',
+        'surface-dim': 'var(--bg)',
+        'surface-bright': 'var(--hover-surface)',
+        'surface-container-lowest': 'var(--bg)',
+        'surface-container-low': 'var(--surface)',
+        'surface-container': 'var(--elevated)',
+        'surface-container-high': 'var(--muted-surface)',
+        'surface-container-highest': 'var(--hover-surface)',
+        'primary-container': 'var(--primary)',
+        'on-primary-container': 'var(--on-primary)',
+        'inverse-primary': 'var(--primary)',
+        secondary: 'var(--danger)',
+        'secondary-container': 'var(--danger-soft)',
+        'on-secondary-container': 'var(--danger)',
+        tertiary: 'var(--accent)',
+        'tertiary-container': 'var(--accent)',
+        'on-tertiary-container': 'var(--text)',
+        error: 'var(--danger)',
+        'error-container': 'var(--danger-soft)',
+        outline: 'var(--muted)',
+        'outline-variant': 'var(--border-strong)',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+      },
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.25rem',
+        '4xl': '1.5rem',
+      },
+      boxShadow: {
+        soft: 'var(--shadow-soft)',
+        card: 'var(--shadow-card)',
+        glow: 'var(--shadow-glow)',
+        'glow-danger': 'var(--shadow-glow-danger)',
+      },
+      maxWidth: {
+        content: '1120px',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.4s ease forwards',
+        'slide-up': 'slideUp 0.45s ease forwards',
+        'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        slideUp: {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.65' },
+        },
+      },
+    },
+  },
+  plugins: [
+    function ({ addVariant }) {
+      addVariant('light', 'html.light &');
+    },
+  ],
+};
