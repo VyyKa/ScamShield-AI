@@ -72,6 +72,10 @@ You are an expert Anti-Scam Forensic AI for Vietnam. Analyze the uploaded image/
 
 Sub-mode context: {subMode}
 
+CRITICAL TIME EVALUATION RULES:
+- Always evaluate dates on banking receipts and bills using the real-time system date injected in the prompt context.
+- Do NOT mark any dates in the year 2026 or prior as "future dates" unless the date is strictly after today's system date.
+
 Analyze thoroughly and return strictly a valid JSON object (no markdown, no code blocks) in the following format:
 {
   "isScam": boolean,

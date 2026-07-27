@@ -66,12 +66,20 @@ export async function POST(req: NextRequest) {
             });
           }
 
+          const now = new Date();
+          const currentDateStr = now.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+          const currentYear = now.getFullYear();
+
+          const timeContext = `\n\n[BẢO MẬT THỜI GIAN THỰC TẾ HỆ THỐNG]:
+- Ngày hôm nay (System Date): ${currentDateStr} (Năm ${currentYear}).
+- QUY TẮC ĐÁNH GIÁ THỜI GIAN: Hôm nay là năm ${currentYear}. Bất kỳ ngày giao dịch nào trong năm ${currentYear} hoặc các năm trước (${currentYear - 1}, ${currentYear - 2}) nhỏ hơn hoặc bằng ngày ${currentDateStr} ĐỀU LÀ THỜI GIAN HỢP LỆ TRONG QUÁ KHỨ/HIỆN TẠI, TUYỆT ĐỐI KHÔNG ĐƯỢC BÁO LỖI LÀ "thời gian trong tương lai".`;
+
           const intelBlock =
             threatIntel && threatIntel.urls.length
               ? `\n\nOnline threat intel (URLhaus + DNS):\n${JSON.stringify(threatIntel, null, 2)}`
               : '';
 
-          const fullPrompt = `${promptText}\n\nNội dung văn bản kèm theo (nếu có):\n"${text || 'Không có văn bản'}"${intelBlock}`;
+          const fullPrompt = `${promptText}${timeContext}\n\nNội dung văn bản kèm theo (nếu có):\n"${text || 'Không có văn bản'}"${intelBlock}`;
           contents.push(fullPrompt);
 
           const { text: responseText, model } = await generateWithGemini(aiInstance, contents);
