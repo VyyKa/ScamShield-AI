@@ -416,6 +416,13 @@ export const ScanVerifyTab: React.FC = () => {
                       </span>
                     </div>
 
+                    {log.imageUrl && (
+                      <div className="my-1.5 overflow-hidden rounded-xl border border-white/10 max-h-48 bg-black/40 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={log.imageUrl} alt="Ảnh giám định" className="max-h-48 w-auto object-contain" />
+                      </div>
+                    )}
+
                     {log.scannedText && (
                       <p className="text-xs font-mono text-on-surface line-clamp-2 bg-surface p-2 rounded-lg border border-white/5">
                         "{log.scannedText}"

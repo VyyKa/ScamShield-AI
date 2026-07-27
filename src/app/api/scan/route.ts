@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
           analysisDetails: finalResult.analysisDetails,
           recommendedAction: finalResult.recommendedAction,
           scannedText: text || null,
+          imageUrl: image || null,
           ipAddress: clientIp,
         },
       });
@@ -252,6 +253,7 @@ export async function GET(req: NextRequest) {
         analysisDetails: log.analysisDetails,
         recommendedAction: log.recommendedAction,
         scannedText: log.scannedText,
+        imageUrl: log.imageUrl,
         createdAt: log.createdAt,
       };
     });

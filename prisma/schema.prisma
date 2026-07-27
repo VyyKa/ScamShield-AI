@@ -208,6 +208,7 @@ model ScanLog {
   analysisDetails   String @default("")
   recommendedAction String @default("")
   scannedText       String?
+  imageUrl          String?
 
   /// gemini model id hoặc "heuristic"
   modelUsed   String?
