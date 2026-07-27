@@ -177,7 +177,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => 
       {/* Floating Product Tour Tooltip Callout Box */}
       <div
         style={tooltipStyle}
-        className="w-[360px] sm:w-[400px] rounded-2xl border border-primary/40 bg-[#0a1224] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[102] transition-all duration-300 animate-scale-in space-y-4"
+        className="w-[calc(100vw-32px)] max-w-sm sm:max-w-md rounded-2xl border border-primary/40 bg-[#0a1224] p-4 sm:p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[102] transition-all duration-300 animate-scale-in space-y-4"
       >
         {/* Tooltip Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
