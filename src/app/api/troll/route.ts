@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getGenAIInstance, TROLL_PROMPT, cleanAndParseJSON, generateWithGemini, parseGeminiError } from '@/lib/gemini';
 import { TrollResponse, TrollMessage } from '@/types';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, sanitizeText } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, { limit: 15, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { success: false, error: 'Tần suất nhắn quá nhanh! Vui lòng đợi 1 phút.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const {
       history = [],
@@ -15,6 +24,7 @@ export async function POST(req: NextRequest) {
       personaDetails = '',
       apiKey: bodyApiKey,
     } = body;
+    const sanitizedScammerMsg = sanitizeText(lastScammerMessage, 1000);
     const customKey = req.headers.get('x-gemini-key') || bodyApiKey;
 
     const formattedHistory = history

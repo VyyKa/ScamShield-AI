@@ -14,6 +14,8 @@ import {
   suggestStatus,
 } from '@/lib/scoring';
 
+import { checkRateLimit, sanitizeText } from '@/lib/security';
+
 export const dynamic = 'force-dynamic';
 
 function mapEntityForClient(row: any) {
@@ -123,8 +125,22 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, { limit: 20, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { success: false, error: 'Tần suất gửi báo cáo quá nhanh! Vui lòng đợi 1 phút.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
-    const { category, targetValue, ownerName, bankName, scamType, description, reporterId } = body;
+    const targetValue = sanitizeText(body.targetValue, 250);
+    const scamType = sanitizeText(body.scamType, 200);
+    const ownerName = sanitizeText(body.ownerName, 100);
+    const bankName = sanitizeText(body.bankName, 100);
+    const description = sanitizeText(body.description, 2000);
+    const category = body.category;
+    const reporterId = body.reporterId;
 
     if (!targetValue || !scamType) {
       return NextResponse.json(

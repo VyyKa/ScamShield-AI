@@ -5,12 +5,24 @@ import { PRESET_SAMPLES } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
 import { enrichThreatIntel } from '@/lib/onlineApis';
 
+import { checkRateLimit, sanitizeText } from '@/lib/security';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate Limiting (max 15 scans per minute per IP)
+    const rateLimit = checkRateLimit(req, { limit: 15, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { success: false, error: 'Tần suất quét quá nhanh! Vui lòng đợi 1 phút trước khi quét lại.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { image, text, subMode = 'fake_bill', presetId, apiKey: bodyApiKey } = body;
+    const sanitizedInputText = sanitizeText(text);
     const customKey = req.headers.get('x-gemini-key') || bodyApiKey;
     const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
@@ -19,9 +31,9 @@ export async function POST(req: NextRequest) {
     let usedModel: string | null = null;
     let threatIntel: Awaited<ReturnType<typeof enrichThreatIntel>> | null = null;
 
-    if (text && typeof text === 'string' && text.trim()) {
+    if (sanitizedInputText) {
       try {
-        threatIntel = await enrichThreatIntel(text);
+        threatIntel = await enrichThreatIntel(sanitizedInputText);
       } catch (e) {
         console.warn('Threat intel enrich failed:', e);
       }
