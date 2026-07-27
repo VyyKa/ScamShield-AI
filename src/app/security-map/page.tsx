@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/clientApi';
-import { GitHubAdvisory } from '@/lib/onlineApis';
+import { GitHubAdvisory, ShodanExploit, FeodoThreatIP } from '@/lib/onlineApis';
 
 interface LiveAttack {
   id: string;
@@ -21,9 +21,12 @@ interface MapData {
     totalAttacksBlockedToday: number;
     activeBotnetNodes: number;
     criticalVulnerabilitiesLogged: number;
+    shodanExploitsCount?: number;
     topVectors: { name: string; percent: number }[];
   };
   githubAdvisories: GitHubAdvisory[];
+  shodanExploits?: ShodanExploit[];
+  feodoThreats?: FeodoThreatIP[];
   liveAttacks: LiveAttack[];
 }
 
@@ -31,7 +34,7 @@ export default function SecurityMapPage() {
   const [data, setData] = useState<MapData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
-  const [activeTab, setActiveTab] = useState<'attacks' | 'github'>('attacks');
+  const [activeTab, setActiveTab] = useState<'attacks' | 'shodan' | 'feodo' | 'github'>('attacks');
 
   const fetchSecurityMapData = async () => {
     try {
@@ -220,7 +223,7 @@ export default function SecurityMapPage() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
           {/* Tabs */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setActiveTab('attacks')}
               className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 ${
@@ -234,6 +237,30 @@ export default function SecurityMapPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('shodan')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 ${
+                activeTab === 'shodan'
+                  ? 'bg-primary text-on-primary shadow-glow'
+                  : 'bg-surface text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">lan</span>
+              Shodan API (developer.shodan.io)
+            </button>
+
+            <button
+              onClick={() => setActiveTab('feodo')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 ${
+                activeTab === 'feodo'
+                  ? 'bg-primary text-on-primary shadow-glow'
+                  : 'bg-surface text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">bug_report</span>
+              Feodo Tracker Botnet C2 ({data?.feodoThreats?.length || 0})
+            </button>
+
+            <button
               onClick={() => setActiveTab('github')}
               className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 ${
                 activeTab === 'github'
@@ -242,7 +269,7 @@ export default function SecurityMapPage() {
               }`}
             >
               <span className="material-symbols-outlined text-base">code</span>
-              GitHub Security Advisories API ({filteredAdvisories.length})
+              GitHub Advisories API ({filteredAdvisories.length})
             </button>
           </div>
 
@@ -313,7 +340,101 @@ export default function SecurityMapPage() {
           </div>
         )}
 
-        {/* Tab 2: GitHub Security Advisories Feed */}
+        {/* Tab 2: Shodan Threat Intelligence & Exploits Engine */}
+        {activeTab === 'shodan' && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(data?.shodanExploits || []).map((exp) => (
+              <div
+                key={exp.id}
+                className="card p-4 space-y-2.5 border border-cyan/30 bg-cyan/5 hover:border-cyan transition flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2 py-0.5 rounded bg-black/60 border border-cyan/40 text-[10px] font-mono text-cyan font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">lan</span>
+                      Shodan Port {exp.port || 80}
+                    </span>
+                    <span className="text-[10px] font-mono text-on-surface-variant">
+                      Platform: <strong className="text-on-surface">{exp.platform}</strong>
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-on-surface font-display leading-snug">
+                    {exp.description}
+                  </h3>
+
+                  <div className="flex flex-wrap gap-1">
+                    {(exp.cve || []).map((cve, idx) => (
+                      <span key={idx} className="text-[10px] font-mono bg-danger/10 text-danger border border-danger/20 px-2 py-0.5 rounded">
+                        {cve}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono text-on-surface-variant">
+                  <span>Nguồn: {exp.source}</span>
+                  <a
+                    href="https://developer.shodan.io/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-cyan font-bold hover:underline flex items-center gap-1 text-[11px]"
+                  >
+                    <span>developer.shodan.io</span>
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab 3: Feodo Tracker Abuse.ch Botnet C2 Blocklist */}
+        {activeTab === 'feodo' && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(data?.feodoThreats || []).map((fd, idx) => (
+              <div
+                key={`${fd.ip}-${idx}`}
+                className="card p-4 space-y-2.5 border border-danger/30 bg-danger/5 hover:border-danger transition flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2 py-0.5 rounded bg-black/60 border border-danger/40 text-[10px] font-mono text-danger font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">bug_report</span>
+                      Botnet C2 IP: {fd.ip}:{fd.port}
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
+                      ● {fd.status}
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-on-surface font-display leading-snug">
+                    Chủng Mã Độc Botnet: <span className="text-danger">{fd.malware}</span>
+                  </h3>
+
+                  <p className="text-[11px] font-mono text-on-surface-variant">
+                    Quốc gia & AS: <strong className="text-on-surface">{fd.country}</strong> ({fd.asName})
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono text-on-surface-variant">
+                  <span>Phát hiện: {new Date(fd.dateAdded).toLocaleDateString('vi-VN')}</span>
+                  <a
+                    href="https://feodotracker.abuse.ch/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-danger font-bold hover:underline flex items-center gap-1 text-[11px]"
+                  >
+                    <span>feodotracker.abuse.ch</span>
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab 4: GitHub Security Advisories Feed */}
         {activeTab === 'github' && (
           <div className="grid gap-3 sm:grid-cols-2">
             {filteredAdvisories.map((adv) => (

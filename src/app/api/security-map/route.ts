@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchGitHubSecurityAdvisories } from '@/lib/onlineApis';
+import { fetchGitHubSecurityAdvisories, fetchShodanExploits, fetchFeodoTrackerThreats } from '@/lib/onlineApis';
 import { checkRateLimit } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
@@ -82,8 +82,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Too Many Requests' }, { status: 429 });
     }
 
-    // Fetch real GitHub Advisories
-    const githubAdvisories = await fetchGitHubSecurityAdvisories();
+    // Fetch real GitHub Advisories, Shodan Threat Exploits & Feodo Tracker C2 IPs in parallel
+    const [githubAdvisories, shodanExploits, feodoThreats] = await Promise.all([
+      fetchGitHubSecurityAdvisories(),
+      fetchShodanExploits(),
+      fetchFeodoTrackerThreats(),
+    ]);
 
     // Generate live attack streams
     const liveAttacks = generateLiveAttacks(15);
@@ -93,8 +97,9 @@ export async function GET(req: NextRequest) {
       timestamp: new Date().toISOString(),
       metrics: {
         totalAttacksBlockedToday: 148290 + Math.floor(Math.random() * 100),
-        activeBotnetNodes: 3410 + Math.floor(Math.random() * 20),
+        activeBotnetNodes: 3410 + (feodoThreats.length || 15) + Math.floor(Math.random() * 20),
         criticalVulnerabilitiesLogged: githubAdvisories.filter((a) => a.severity === 'CRITICAL').length || 4,
+        shodanExploitsCount: shodanExploits.length,
         topVectors: [
           { name: 'Phishing (Giả mạo ngân hàng & COD)', percent: 42 },
           { name: 'Ransomware / Malware', percent: 28 },
@@ -103,6 +108,8 @@ export async function GET(req: NextRequest) {
         ],
       },
       githubAdvisories,
+      shodanExploits,
+      feodoThreats,
       liveAttacks,
     });
   } catch (error: any) {
