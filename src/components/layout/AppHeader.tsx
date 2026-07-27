@@ -15,6 +15,7 @@ const NAV = [
   { href: '/troll', label: 'Troll AI', tourId: 'tour-nav-troll' },
   { href: '/honey', label: 'Deepfake & Trap', tourId: 'tour-nav-honey' },
   { href: '/database', label: 'Kho cảnh báo', tourId: 'tour-nav-database' },
+  { href: '/security-map', label: 'Security Map 🌐', tourId: 'tour-nav-secmap' },
   { href: '/developer', label: 'API', tourId: 'tour-nav-developer' },
 ];
 
@@ -130,11 +131,17 @@ export const AppHeader: React.FC = () => {
             <button
               type="button"
               id="tour-key-button"
-              onClick={() => setShowKey(true)}
-              className="btn-ghost !px-2.5 !py-2"
+              onClick={() => {
+                setApiKey(localStorage.getItem('user_gemini_api_key') || '');
+                setShowKey(true);
+              }}
+              className="btn-ghost !px-2.5 !py-2 relative"
               title="Gemini API Key"
             >
               <span className="material-symbols-outlined text-[20px] text-primary">key</span>
+              {apiKey && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-emerald-400 animate-pulse" title="Đã lưu API Key" />
+              )}
             </button>
 
             <button

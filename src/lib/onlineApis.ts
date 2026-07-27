@@ -424,3 +424,46 @@ export async function enrichThreatIntel(text: string): Promise<{
     redFlags,
   };
 }
+
+export interface GitHubAdvisory {
+  ghsaId: string;
+  cveId: string | null;
+  summary: string;
+  description: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW';
+  publishedAt: string;
+  updatedAt: string;
+  url: string;
+  packageName: string;
+  ecosystem: string;
+}
+
+export async function fetchGitHubSecurityAdvisories(): Promise<GitHubAdvisory[]> {
+  try {
+    const res = await fetchWithTimeout('https://api.github.com/advisories?per_page=20', {
+      headers: {
+        'User-Agent': 'VietGuard-ScamShield-AI',
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    }, 7000);
+
+    if (!res.ok) throw new Error(`GitHub Advisory API HTTP ${res.status}`);
+    const data = await res.json();
+
+    return (data || []).map((item: any) => ({
+      ghsaId: item.ghsa_id || 'GHSA-unknown',
+      cveId: item.cve_id || null,
+      summary: item.summary || 'Bản tin lỗ hổng bảo mật GitHub Advisory',
+      description: item.description || '',
+      severity: (item.severity || 'HIGH').toUpperCase(),
+      publishedAt: item.published_at || new Date().toISOString(),
+      updatedAt: item.updated_at || new Date().toISOString(),
+      url: item.html_url || `https://github.com/advisories/${item.ghsa_id}`,
+      packageName: item.vulnerabilities?.[0]?.package?.name || 'Open-Source Library',
+      ecosystem: item.vulnerabilities?.[0]?.package?.ecosystem || 'npm',
+    }));
+  } catch (err) {
+    console.warn('Failed to fetch GitHub Advisories:', err);
+    return [];
+  }
+}

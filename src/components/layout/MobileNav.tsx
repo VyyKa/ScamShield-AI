@@ -10,6 +10,7 @@ const ITEMS = [
   { href: '/troll', label: 'Troll', icon: 'smart_toy' },
   { href: '/honey', label: 'Deepfake', icon: 'face' },
   { href: '/database', label: 'Kho', icon: 'database' },
+  { href: '/security-map', label: 'Threats', icon: 'public' },
 ];
 
 export const MobileNav: React.FC = () => {
