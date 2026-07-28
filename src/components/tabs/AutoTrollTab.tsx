@@ -55,12 +55,17 @@ export const AutoTrollTab: React.FC = () => {
     frustrationLevel: 6,
   });
 
-  const endRef = useRef<HTMLDivElement>(null);
+  const chatBoxRef = useRef<HTMLDivElement>(null);
   const allPersonas = [...DEFAULT_PERSONAS, ...customPersonas];
   const current = allPersonas.find((p) => p.id === selectedPersona) || DEFAULT_PERSONAS[0];
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatBoxRef.current && chatMessages.length > 0) {
+      chatBoxRef.current.scrollTo({
+        top: chatBoxRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }, [chatMessages, isLoading]);
 
   const toastMsg = (m: string, variant: 'info' | 'success' | 'danger' | 'warning' = 'info') => {
@@ -222,7 +227,7 @@ export const AutoTrollTab: React.FC = () => {
             </span>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
+          <div ref={chatBoxRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
             {chatMessages.map((m) => (
               <div key={m.id} className={`flex ${m.sender === 'scammer' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] sm:max-w-[75%] ${m.sender === 'bot' ? 'chat-bubble-ai' : 'chat-bubble-scammer'}`}>
@@ -242,7 +247,6 @@ export const AutoTrollTab: React.FC = () => {
                 </div>
               </div>
             )}
-            <div ref={endRef} />
           </div>
 
           <div className="shrink-0 border-t border-white/[0.06] bg-surface/40 p-3 sm:p-4 light:border-[var(--hairline)]">
