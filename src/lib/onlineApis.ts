@@ -612,3 +612,36 @@ export async function fetchDShieldHoneypotAttacks(): Promise<DShieldAttackIP[]> 
     return [];
   }
 }
+
+/** Shorten long trap URLs via free public APIs (is.gd / tinyurl) */
+export async function shortenTrapUrl(longUrl: string): Promise<string | null> {
+  try {
+    const isGdRes = await fetchWithTimeout(
+      `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`,
+      { headers: { 'User-Agent': 'VietGuard-ScamShield-AI' } },
+      5000
+    );
+    if (isGdRes.ok) {
+      const data = await isGdRes.json();
+      if (data.shorturl) return data.shorturl;
+    }
+  } catch (e) {
+    console.warn('is.gd shortener failed, trying tinyurl fallback:', e);
+  }
+
+  try {
+    const tinyRes = await fetchWithTimeout(
+      `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`,
+      { headers: { 'User-Agent': 'VietGuard-ScamShield-AI' } },
+      5000
+    );
+    if (tinyRes.ok) {
+      const text = await tinyRes.text();
+      if (text && text.startsWith('http')) return text.trim();
+    }
+  } catch (e) {
+    console.warn('tinyurl shortener failed:', e);
+  }
+
+  return null;
+}

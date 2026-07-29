@@ -7,6 +7,7 @@ import {
 } from '@/lib/gemini';
 import { HoneyTokenData, DeepfakeChallengeResult } from '@/types';
 import { prisma } from '@/lib/prisma';
+import { shortenTrapUrl } from '@/lib/onlineApis';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +20,19 @@ export async function POST(req: NextRequest) {
     const protocol = req.headers.get('x-forwarded-proto') || 'http';
 
     if (action === 'generate_token') {
-      const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const tokenHash = `SCAMTRAP-${randomId}-${Date.now().toString().slice(-4)}`;
+      const randomId = Math.random().toString(36).substring(2, 9);
+      const prefix = type?.toLowerCase().includes('cccd') ? 'doc_id' : 'vcb_receipt';
+      const tokenHash = `${prefix}_${randomId}`;
       const ipTrapUrl = `${protocol}://${host}/api/trap/${tokenHash}`;
       const displayName = name || 'NGUYỄN VĂN MỒI BẪY';
       const docType = type || 'CCCD / ID Card';
+
+      let shortUrl: string | null = null;
+      try {
+        shortUrl = await shortenTrapUrl(ipTrapUrl);
+      } catch (e) {
+        console.warn('Shortener API call error:', e);
+      }
 
       let createdToken = null;
       try {
@@ -47,7 +56,7 @@ export async function POST(req: NextRequest) {
         console.error('Failed to persist HoneyToken in SQLite:', dbErr);
       }
 
-      const tokenData: HoneyTokenData = {
+      const tokenData: HoneyTokenData & { shortUrl?: string | null } = {
         id: createdToken?.id || `ht-${Date.now()}`,
         type: docType,
         targetName: displayName,
@@ -58,11 +67,13 @@ export async function POST(req: NextRequest) {
         watermarkText: `SCAMSHIELD CANARY · ${tokenHash}`,
         createdAt: new Date().toISOString(),
         ipTrapUrl,
+        shortUrl: shortUrl || null,
       };
 
       return NextResponse.json({
         success: true,
         token: tokenData,
+        shortUrl: shortUrl || null,
       });
     }
 

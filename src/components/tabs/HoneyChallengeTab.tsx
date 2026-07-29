@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HoneyTokenData, DeepfakeChallengeResult } from '@/types';
 import { apiPost } from '@/lib/clientApi';
 import { Toast } from '@/components/ui/Toast';
@@ -12,6 +12,35 @@ export const HoneyChallengeTab: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [trapLog, setTrapLog] = useState<any>(null);
   const [isTriggering, setIsTriggering] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const [trapHistory, setTrapHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!generatedToken?.canaryToken) return;
+
+    setIsPolling(true);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/trap/poll?token=${generatedToken.canaryToken}`);
+        const data = await res.json();
+        if (data.success) {
+          if (data.latestLog) {
+            setTrapLog(data.latestLog);
+          }
+          if (data.history) {
+            setTrapHistory(data.history);
+          }
+        }
+      } catch (e) {
+        console.warn('Poll trap log error:', e);
+      }
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      setIsPolling(false);
+    };
+  }, [generatedToken]);
 
   const [callContext, setCallContext] = useState(
     'Người gọi video Zalo xưng công an, nói con tôi nợ 50 triệu tiền viện, yêu cầu chuyển khoản gấp…'
@@ -118,9 +147,9 @@ export const HoneyChallengeTab: React.FC = () => {
       <Toast message={toast} variant={toastVariant} onClose={() => setToast(null)} />
 
       <header>
-        <h1 className="section-title">Deepfake & Honey-token</h1>
+        <h1 className="section-title">Deepfake & Bẫy Định Vị (Honey-Token)</h1>
         <p className="section-sub">
-          Tạo canary link (geo IP qua ip-api.com) và sinh thử thách phát hiện deepfake bằng Gemini.
+          Tạo đường link bẫy ẩn định vị IP thật của kẻ lừa đảo và sinh thử thách vật lý diệt cuộc gọi Deepfake AI.
         </p>
       </header>
 
@@ -133,8 +162,8 @@ export const HoneyChallengeTab: React.FC = () => {
               </span>
             </div>
             <div>
-              <h2 className="font-display font-bold">Honey-token generator</h2>
-              <p className="text-xs text-on-surface-variant">Canary URL + trap log thật</p>
+              <h2 className="font-display font-bold">Tạo Link Bẫy Định Vị</h2>
+              <p className="text-xs text-on-surface-variant">Tạo URL ẩn ngụy trang tài liệu để bẫy IP kẻ gian</p>
             </div>
           </div>
 
@@ -195,32 +224,154 @@ export const HoneyChallengeTab: React.FC = () => {
 
               <div className="rounded-xl border border-cyan/25 bg-cyan-soft/40 p-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="badge-cyan">Token sẵn sàng</span>
+                  <span className="badge-cyan">Link Bẫy Sẵn Sàng</span>
                   <span className="font-mono text-[10px] text-on-surface-variant">{generatedToken.canaryToken}</span>
                 </div>
-                <p className="break-all font-mono text-[11px] text-cyan">{generatedToken.ipTrapUrl}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className="btn-secondary text-xs" onClick={copyUrl}>
+
+                <div className="space-y-2 font-mono text-[11px]">
+                  <div>
+                    <p className="text-[10px] font-sans text-on-surface-variant mb-1">Link Ngụy Trang Kỹ Thuật:</p>
+                    <p className="break-all text-cyan bg-black/40 p-2 rounded border border-white/5">{generatedToken.ipTrapUrl}</p>
+                  </div>
+
+                  {(generatedToken as any).shortUrl && (
+                    <div>
+                      <p className="text-[10px] font-sans text-emerald-400 font-bold mb-1">Link Rút Gọn Siêu Gọn (is.gd / tinyurl):</p>
+                      <p className="break-all text-emerald-300 bg-black/60 p-2 rounded border border-emerald-500/30 font-bold">
+                        {(generatedToken as any).shortUrl}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    type="button"
+                    className="btn-secondary text-xs"
+                    onClick={() => {
+                      const urlToCopy = (generatedToken as any).shortUrl || generatedToken.ipTrapUrl;
+                      navigator.clipboard.writeText(urlToCopy);
+                      notify('Đã copy đường link bẫy rút gọn!', 'success');
+                    }}
+                  >
                     <span className="material-symbols-outlined text-base">content_copy</span>
-                    Copy URL
+                    Copy Link Bẫy
                   </button>
                   <button type="button" className="btn-primary text-xs" disabled={isTriggering} onClick={handleTriggerTrap}>
                     <span className="material-symbols-outlined text-base">bug_report</span>
-                    {isTriggering ? 'Đang bẫy…' : 'Mô phỏng scammer mở link'}
+                    {isTriggering ? 'Đang thử…' : 'Mô phỏng Scammer mở link'}
                   </button>
                   <a href={generatedToken.ipTrapUrl} target="_blank" rel="noreferrer" className="btn-ghost text-xs">
                     Mở trang trap
                   </a>
                 </div>
 
+                {/* Live Radar Polling Status */}
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="font-mono text-[11px] text-emerald-400 font-bold">
+                      Đang lắng nghe kẻ lừa đảo mở link...
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px] text-on-surface-variant">Tự động bắt IP mỗi 3s</span>
+                </div>
+
                 {trapLog && (
-                  <div className="rounded-xl bg-surface p-3 font-mono text-[11px] text-primary">
-                    <p className="mb-1 font-sans text-xs font-bold text-danger">TRAP TRIGGERED</p>
-                    <p>IP: {trapLog.ipAddress}</p>
-                    <p className="text-on-surface-variant">Geo: {trapLog.location}</p>
-                    {trapLog.isp && <p className="text-on-surface-variant">ISP: {trapLog.isp}</p>}
-                    <p className="text-on-surface-variant">Nguồn: {trapLog.geoSource || 'ip-api.com'}</p>
-                    <p className="text-on-surface-variant">UA: {(trapLog.userAgent || '').slice(0, 60)}</p>
+                  <div className="rounded-xl border border-danger/40 bg-danger/10 p-3.5 space-y-2.5 font-mono text-[11px] animate-pulse">
+                    <div className="flex items-center justify-between border-b border-danger/30 pb-2">
+                      <span className="font-sans text-xs font-extrabold text-danger flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-base">warning</span>
+                        SẬP BẪY! KẺ LỪA ĐẢO VỪA NHẤP VÀO LINK
+                      </span>
+                      <span className="text-[10px] text-danger font-bold">LIVE TELEMETRY</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-on-surface-variant text-[10px] block">ĐỊA CHỈ IP THẬT:</span>
+                        <strong className="text-danger text-sm font-bold">{trapLog.ipAddress}</strong>
+                      </div>
+                      <div>
+                        <span className="text-on-surface-variant text-[10px] block">VỊ TRÍ TỈNH / THÀNH:</span>
+                        <strong className="text-emerald-400 text-xs font-bold">{trapLog.location}</strong>
+                      </div>
+                    </div>
+
+                    {/* Advanced Device Fingerprint */}
+                    {(() => {
+                      let fpData: any = {};
+                      try {
+                        fpData = typeof trapLog.geoJson === 'string' ? JSON.parse(trapLog.geoJson) : (trapLog.geoJson || {});
+                      } catch(e){}
+                      const fp = fpData.deviceFingerprint || {};
+                      const gps = fpData.gpsCoords;
+
+                      return (
+                        <div className="space-y-1.5 pt-2 border-t border-white/10 text-[10px]">
+                          <p className="font-sans font-bold text-cyan flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs">memory</span>
+                            DẤU VẾT PHẦN CỨNG & THIẾT BỊ (FINGERPRINT):
+                          </p>
+                          
+                          {fp.gpu && (
+                            <div>
+                              <span className="text-on-surface-variant">Chip / Card Đồ Họa (GPU): </span>
+                              <strong className="text-amber">{fp.gpu}</strong>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-1 text-[10px]">
+                            {fp.screen && <div>Màn hình: <span className="text-on-surface">{fp.screen}</span></div>}
+                            {fp.cores && <div>Số nhân CPU: <span className="text-on-surface">{fp.cores} cores</span></div>}
+                            {fp.ram && <div>Bộ nhớ RAM: <span className="text-on-surface">{fp.ram}</span></div>}
+                            {fp.timezone && <div>Múi giờ máy: <span className="text-on-surface">{fp.timezone}</span></div>}
+                          </div>
+
+                          {gps && (
+                            <div className="p-2 rounded bg-black/60 border border-emerald-400/40 text-emerald-300 font-bold">
+                              📍 TỌA ĐỘ GPS THỰC TẾ: {gps.lat}, {gps.lng} (Độ chính xác: ~{Math.round(gps.acc || 0)}m)
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {trapLog.isp && (
+                      <div>
+                        <span className="text-on-surface-variant text-[10px] block">NHÀ MẠNG (ISP):</span>
+                        <span className="text-on-surface font-semibold">{trapLog.isp}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      <span className="text-on-surface-variant text-[10px] block">THIẾT BỊ / TRÌNH DUYỆT (USER-AGENT):</span>
+                      <span className="text-on-surface-variant break-all text-[10px]">{(trapLog.userAgent || '').slice(0, 85)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Trap History Viewer */}
+                {trapHistory.length > 0 && (
+                  <div className="pt-3 space-y-2">
+                    <p className="text-xs font-bold text-on-surface flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm text-primary">history</span>
+                      Lịch Sử Kẻ Gian Sập Bẫy ({trapHistory.length} lượt)
+                    </p>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                      {trapHistory.map((h: any, idx: number) => (
+                        <div key={h.id || idx} className="flex items-center justify-between bg-black/50 p-2 rounded text-[11px] font-mono border border-white/5">
+                          <span className="text-danger font-bold">{h.ipAddress}</span>
+                          <span className="text-on-surface-variant">{h.location}</span>
+                          <span className="text-[10px] text-on-surface-variant/70">
+                            {new Date(h.createdAt).toLocaleTimeString('vi-VN')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

@@ -72,14 +72,35 @@ export async function POST(req: NextRequest) {
 
           const timeContext = `\n\n[BẢO MẬT THỜI GIAN THỰC TẾ HỆ THỐNG]:
 - Ngày hôm nay (System Date): ${currentDateStr} (Năm ${currentYear}).
-- QUY TẮC ĐÁNH GIÁ THỜI GIAN: Hôm nay là năm ${currentYear}. Bất kỳ ngày giao dịch nào trong năm ${currentYear} hoặc các năm trước (${currentYear - 1}, ${currentYear - 2}) nhỏ hơn hoặc bằng ngày ${currentDateStr} ĐỀU LÀ THỜI GIAN HỢP LỆ TRONG QUÁ KHỨ/HIỆN TẠI, TUYỆT ĐỐI KHÔNG ĐƯỢC BÁO LỖI LÀ "thời gian trong tương lai".`;
+- QUY TẮC ĐÁNH GIÁ THỜI GIAN: Bất kỳ ngày giao dịch nào trong năm ${currentYear} hoặc các năm trước nhỏ hơn hoặc bằng ngày ${currentDateStr} ĐỀU LÀ THỜI GIAN HỢP LỆ, TUYỆT ĐỐI KHÔNG ĐƯỢC BÁO LỖI LÀ "thời gian trong tương lai".`;
+
+          const bankUiKnowledge = `
+
+[CƠ SỞ DỮ LIỆU KIẾN THỨC GIAO DIỆN NGÂN HÀNG VIỆT NAM (RAG Knowledge Base)]:
+1. VietinBank iPay:
+   - Tên ngân hàng thụ hưởng qua NAPAS 247 có dạng 'TPBank_Ngân hàng Tiên Phong', 'Vietcombank_Ngân hàng TMCP Ngoại Thương' (dùng dấu gạch dưới '_'). Mã giao dịch gồm chữ và số dạng '6185ICBVC2QHF9C5'. Đây là định dạng hợp lệ 100%.
+
+2. Agribank E-Mobile Banking:
+   - Giao diện có logo '38 NĂM AGRIBANK' (hoặc logo Agribank chuẩn), khung thẻ màu trắng viền răng cưa bo góc trên nền đỏ.
+   - Tên ngân hàng thụ hưởng dùng dấu gạch ngang dạng 'MB–Ngân hàng TMCP Quân Đội', 'VCB–Ngân hàng TMCP Ngoại Thương'.
+   - Số tài khoản thụ hưởng có thể là mã định danh VietQR dạng chuỗi chữ và số như 'VQRQABOFH0240'.
+   - Mã giao dịch dạng số ngắn 9 chữ số (ví dụ: '142036341'). Định dạng thời gian '14-07-2026 09:43:01'. ĐÂY LÀ BIÊN LAI THẬT CỦA AGRIBANK.
+
+3. MBBank (MB Priority & MB App):
+   - Giao diện thiết kế hiệu ứng kính mờ (Frosted Glassmorphism) màu xanh dương đậm, có logo 'MB | PRIORITY' hoặc logo sao 5 cánh MB.
+   - Dòng chữ xác thực ở đáy thẻ: "Giao dịch được xác nhận bởi MB. Vui lòng không chỉnh sửa hình ảnh này."
+   - Định dạng thời gian: '09:30 - 10/07/2026' hoặc 'HH:mm - DD/MM/YYYY'. Tên ngân hàng có logo icon vuông nhỏ (ví dụ logo TPBank màu cam). ĐÂY LÀ BIÊN LAI THẬT CỦA MBBANK.
+
+4. QUY TẮC CHỐNG BÁO SAI (ANTI-FALSE-POSITIVE CRITICAL RULE):
+   - Nếu hình ảnh khớp với 1 trong các mẫu giao diện ứng dụng ngân hàng chính thức trên, kết luận: isScam: false, riskScore: 0 đến 10, redFlags: [].
+   - TUYỆT ĐỐI KHÔNG tự bịa ra cờ đỏ hoặc phán đoán "bất thường" đối với các định dạng chữ, logo, gạch dưới/gạch ngang chuẩn của ngân hàng.`;
 
           const intelBlock =
             threatIntel && threatIntel.urls.length
               ? `\n\nOnline threat intel (URLhaus + DNS):\n${JSON.stringify(threatIntel, null, 2)}`
               : '';
 
-          const fullPrompt = `${promptText}${timeContext}\n\nNội dung văn bản kèm theo (nếu có):\n"${text || 'Không có văn bản'}"${intelBlock}`;
+          const fullPrompt = `${promptText}${timeContext}${bankUiKnowledge}\n\nNội dung văn bản kèm theo (nếu có):\n"${text || 'Không có văn bản'}"${intelBlock}`;
           contents.push(fullPrompt);
 
           const { text: responseText, model } = await generateWithGemini(aiInstance, contents);

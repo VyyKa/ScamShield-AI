@@ -206,6 +206,18 @@ export const ScanVerifyTab: React.FC = () => {
         })}
       </div>
 
+      <div className="rounded-xl border border-amber/30 bg-amber-soft p-3.5 flex items-start gap-3 text-xs text-on-surface">
+        <span className="material-symbols-outlined text-amber text-xl shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
+          verified_user
+        </span>
+        <div className="space-y-0.5">
+          <strong className="text-amber block font-bold">Khuyến cáo bảo mật quan trọng:</strong>
+          <span>
+            Ảnh chụp màn hình chuyển khoản <strong>có thể bị làm giả 100%</strong> bằng các ứng dụng chỉnh sửa. AI chỉ hỗ trợ soi dấu hiệu kỹ thuật. <strong>Bạn luôn cần kiểm tra biến động số dư trên ứng dụng ngân hàng thật</strong> trước khi giao hàng.
+          </span>
+        </div>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-12">
         {/* Input */}
         <div className="space-y-4 lg:col-span-7">
