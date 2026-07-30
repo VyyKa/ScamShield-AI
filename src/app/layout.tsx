@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   description:
     'Giám định bill giả, troll scammer, honey-token, tra cứu blacklist và phát hiện deepfake — bảo vệ người Việt khỏi lừa đảo online.',
   applicationName: 'ScamShield AI',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favico.png',
+    shortcut: '/favico.png',
+    apple: '/favico.png',
+  },
   keywords: [
     'chống lừa đảo',
     'anti scam',

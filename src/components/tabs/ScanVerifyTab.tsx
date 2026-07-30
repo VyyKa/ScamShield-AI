@@ -46,6 +46,7 @@ export const ScanVerifyTab: React.FC = () => {
   const subModeOptions = [
     { id: 'fake_bill' as const, title: 'Bill & QR', icon: 'receipt_long', hint: 'Biên nhận chuyển khoản' },
     { id: 'shipper_cross' as const, title: 'Shipper', icon: 'local_shipping', hint: 'SMS / Zalo COD' },
+    { id: 'zalo_chat' as const, title: 'Chat Zalo / Tele', icon: 'chat', hint: 'Hội thoại nghi vấn' },
     { id: 'physical_poster' as const, title: 'Poster', icon: 'campaign', hint: 'Tuyển CTV / đầu tư' },
   ];
 

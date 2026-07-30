@@ -10,11 +10,7 @@ export const Footer: React.FC = () => {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="icon-box-green !h-8 !w-8">
-                <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  shield_person
-                </span>
-              </div>
+              <img src="/favico.png" alt="ScamShield AI Logo" className="h-8 w-8 object-contain rounded-lg" />
               <span className="font-display font-bold">
                 ScamShield <span className="text-gradient-green">AI</span>
               </span>

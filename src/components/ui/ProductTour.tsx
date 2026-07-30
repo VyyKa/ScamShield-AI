@@ -82,13 +82,9 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => 
   useEffect(() => {
     if (!isOpen) return;
 
-    if (currentStep?.route && pathname !== currentStep.route) {
-      router.push(currentStep.route);
-    }
-
     const timer = setTimeout(() => {
       updateTargetRect();
-    }, 200);
+    }, 150);
 
     window.addEventListener('resize', updateTargetRect);
     window.addEventListener('scroll', updateTargetRect, true);
@@ -98,7 +94,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => 
       window.removeEventListener('resize', updateTargetRect);
       window.removeEventListener('scroll', updateTargetRect, true);
     };
-  }, [isOpen, currentStepIndex, currentStep, pathname, router, updateTargetRect]);
+  }, [isOpen, currentStepIndex, currentStep, updateTargetRect]);
 
   if (!isOpen || !currentStep) return null;
 

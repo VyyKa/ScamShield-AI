@@ -1,4 +1,4 @@
-export type ScanSubMode = 'fake_bill' | 'shipper_cross' | 'physical_poster';
+export type ScanSubMode = 'fake_bill' | 'shipper_cross' | 'physical_poster' | 'zalo_chat';
 
 export interface ScanResult {
   isScam: boolean;

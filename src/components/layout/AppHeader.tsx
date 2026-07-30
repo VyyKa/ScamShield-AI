@@ -15,6 +15,7 @@ const NAV = [
   { href: '/troll', label: 'Troll AI', tourId: 'tour-nav-troll' },
   { href: '/honey', label: 'Deepfake & Trap', tourId: 'tour-nav-honey' },
   { href: '/database', label: 'Kho cảnh báo', tourId: 'tour-nav-database' },
+  { href: '/education', label: 'Giáo dục & Quiz', tourId: 'tour-nav-education' },
   { href: 'https://cybermap.kaspersky.com/', label: 'Security Map', tourId: 'tour-nav-secmap', external: true },
 ];
 
@@ -87,11 +88,11 @@ export const AppHeader: React.FC = () => {
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-3 sm:px-6">
           <div onClick={handleLogoClick} className="cursor-pointer">
             <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary-soft text-primary transition group-hover:scale-105">
-                <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  shield_person
-                </span>
-              </div>
+              <img
+                src="/favico.png"
+                alt="ScamShield AI Logo"
+                className="h-9 w-9 object-contain rounded-xl transition group-hover:scale-105"
+              />
               <div className="hidden min-[400px]:block">
                 <p className="font-display text-[15px] font-bold leading-tight tracking-tight">
                   ScamShield <span className="text-gradient-green">AI</span>

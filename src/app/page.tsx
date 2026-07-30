@@ -394,17 +394,97 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Official Verification Portals */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-base font-bold flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-xl">verified</span>
+              Cổng Thông Tin & Xác Minh Chính Thức
+            </h2>
+            <p className="text-xs text-on-surface-variant">Tra cứu tại các cơ quan quản lý an toàn thông tin quốc gia</p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <a
+            href="https://tinnhiemmang.vn/"
+            target="_blank"
+            rel="noreferrer"
+            className="card p-4 space-y-2 border border-primary/30 bg-primary/5 hover:border-primary transition group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="badge-green text-[10px]">Quốc Gia</span>
+              <span className="material-symbols-outlined text-primary text-base group-hover:translate-x-0.5 transition">open_in_new</span>
+            </div>
+            <h3 className="text-xs font-bold text-on-surface">Tín Nhiệm Mạng</h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed">Tra cứu website, tổ chức & dịch vụ chính thống do NCSC chứng nhận.</p>
+          </a>
+
+          <a
+            href="https://khonggianmang.vn/"
+            target="_blank"
+            rel="noreferrer"
+            className="card p-4 space-y-2 border border-cyan/30 bg-cyan/5 hover:border-cyan transition group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="badge-cyan text-[10px]">Cục ATTT</span>
+              <span className="material-symbols-outlined text-cyan text-base group-hover:translate-x-0.5 transition">open_in_new</span>
+            </div>
+            <h3 className="text-xs font-bold text-on-surface">Không Gian Mạng VN</h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed">Cập nhật cảnh báo lỗ hổng an ninh & tin tức lừa đảo mới nhất.</p>
+          </a>
+
+          <a
+            href="https://vneid.gov.vn/"
+            target="_blank"
+            rel="noreferrer"
+            className="card p-4 space-y-2 border border-amber/30 bg-amber/5 hover:border-amber transition group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="badge-amber text-[10px]">Bộ Công An</span>
+              <span className="material-symbols-outlined text-amber text-base group-hover:translate-x-0.5 transition">open_in_new</span>
+            </div>
+            <h3 className="text-xs font-bold text-on-surface">VNeID Chính Thức</h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed">Cổng thông tin Định danh điện tử Quốc gia (BCA).</p>
+          </a>
+
+          <div className="card p-4 space-y-2 border border-danger/30 bg-danger/5">
+            <div className="flex items-center justify-between">
+              <span className="badge-danger text-[10px]">Hotline 156 / 111</span>
+              <span className="material-symbols-outlined text-danger text-base">phone_in_talk</span>
+            </div>
+            <h3 className="text-xs font-bold text-on-surface">Tổng Đài Tố Giác</h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed">Gọi 156 tố giác cuộc gọi rác / 111 bảo vệ trẻ em trực tuyến.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Hot Scam Tricks Alert */}
       <section className="card border-danger/30 p-5 sm:p-6 glow-alert bg-danger/5">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="icon-box-danger">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-              warning
-            </span>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="icon-box-danger">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                warning
+              </span>
+            </div>
+            <div>
+              <h2 className="font-display text-base font-bold">Thủ Đoạn Thường Gặp</h2>
+              <p className="text-xs text-on-surface-variant">Các hình thức gian lận trực tuyến cần lưu ý</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-display text-base font-bold">Thủ Đoạn Thường Gặp</h2>
-            <p className="text-xs text-on-surface-variant">Các hình thức gian lận trực tuyến cần lưu ý</p>
+
+          <div className="hidden sm:flex items-center gap-2">
+            <a
+              href="https://t.me/share/url?url=https://scamshield.id.vn&text=Cảnh%20báo%20lừa%20đảo%20mạng"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary py-1 px-2.5 text-[11px] flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-xs">send</span>
+              Chia sẻ Telegram
+            </a>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
